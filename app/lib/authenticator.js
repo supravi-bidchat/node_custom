@@ -4,19 +4,19 @@ var jwt         = require('jwt-simple');
 
 module.exports = {
 
-	authenticate: 	function(headers, callback) {
+	authenticate: 	function(req,res,next) {
 
-		var token = getToken(headers);
+		var token = getToken(req.headers);
 
 		if (!token) {
-			return callback(false);
+			return res.status(401).send({"message":"Unauthorized"});
 		}
 
 		try {
 		    var decodedToken = jwt.decode(token, config.security.salt);
 		}
 		catch(err) {
-		    return callback(false);
+		    return res.status(401).send({"message":"Unauthorized"});
 		}
 
 		var userId = getUserIdFromDecodedToken(decodedToken);
@@ -26,9 +26,10 @@ module.exports = {
 			token 	: token
 		}}).then(function(user) {
 			if (user.length == 0) {
-				return callback(false);
+				return res.status(401).send({"message":"Unauthorized"});
 			}
-			return callback(user[0].user_id);
+			req.response = user[0].user_id;
+			return next();
 		});
 	}
 }
